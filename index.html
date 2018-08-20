@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>ncm converter</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8/normalize.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@webcomponents/webcomponentsjs@2/webcomponents-loader.min.js"></script>
+    <script src="index.js" type="module" defer></script>
+    <style>
+        html {
+            box-sizing: border-box;
+            background: #e1e4e8;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: inherit;
+        }
+
+        html,
+        body,
+        ncmc-list {
+            height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            flex: 1 0 auto;
+        }
+
+        .big {
+            font-size: 38px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 1rem;
+        }
+    </style>
+
+</head>
+
+<body>
+    <ncmc-list>
+        <div class="big">
+            Loading...
+        </div>
+    </ncmc-list>
+</body>
+
+</html>
