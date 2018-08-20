@@ -5,11 +5,15 @@ import {
 } from "https://unpkg.com/@polymer/lit-element@latest/lit-element.js?module";
 import { produce } from "https://cdn.jsdelivr.net/npm/immer@1.5.0/dist/immer.module.min.js";
 
-document.body.addEventListener("dragover", e => {
-  e.preventDefault();
-  e.stopPropagation();
-  return false;
-});
+document.body.addEventListener(
+  "dragover",
+  e => {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  },
+  false
+);
 
 customElements.define(
   "ncmc-list",
@@ -59,12 +63,16 @@ customElements.define(
     connectedCallback() {
       super.connectedCallback();
 
-      window.addEventListener("drop", e => {
-        e.preventDefault();
-        e.stopPropagation();
-        this.fileHandler(e.dataTransfer.files);
-        return false;
-      });
+      document.body.addEventListener(
+        "drop",
+        e => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.fileHandler(e.dataTransfer.files);
+          return false;
+        },
+        false
+      );
 
       document.addEventListener("play-track", this.playTrackHandler);
     }
@@ -73,7 +81,7 @@ customElements.define(
       super.disconnectedCallback();
 
       this.worker.terminate();
-      window.removeEventListener("drop", this.dropHandler);
+      document.body.removeEventListener("drop", this.dropHandler, false);
       document.removeEventListener("play-track", this.playTrackHandler);
     }
 
