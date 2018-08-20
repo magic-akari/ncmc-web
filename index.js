@@ -199,7 +199,6 @@ customElements.define(
         .main {
           height: 200px;
           width: 200px;
-          background: url('${track.image || placeHolder}');
           background-size: cover;
         }
 
@@ -231,7 +230,7 @@ customElements.define(
           background-color: #00000080;
         }
       </style>
-      <section class="main">
+      <section class="main" style="background-image:url('${track.image || placeHolder}')">
         <div class="button-group">
           <a href="#" on-click=${this.playHandler}>${playButton()}</a>
           <a disabled=${!track.url} href="${this.url}" download="${
