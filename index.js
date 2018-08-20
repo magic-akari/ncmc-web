@@ -7,6 +7,8 @@ import { produce } from "https://cdn.jsdelivr.net/npm/immer@1.5.0/dist/immer.mod
 
 document.body.addEventListener("dragover", e => {
   e.preventDefault();
+  e.stopPropagation();
+  return false;
 });
 
 customElements.define(
@@ -59,7 +61,9 @@ customElements.define(
 
       window.addEventListener("drop", e => {
         e.preventDefault();
+        e.stopPropagation();
         this.fileHandler(e.dataTransfer.files);
+        return false;
       });
 
       document.addEventListener("play-track", this.playTrackHandler);
