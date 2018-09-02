@@ -117,7 +117,7 @@ customElements.define(
                         ${tracks.map(
                           track => html`<ncmc-card track=${track} />`
                         )}
-                      <section>`
+                      </section>`
                 : html`<div class="big">drag and drop ncm files here</div>`
             }
             
@@ -241,7 +241,6 @@ customElements.define(
       <section class="info">
         <p>${this.name}</p>
         <p>${this.album}</p>
-        <p>${this.meta && this.meta.format}</p>
       </section>
 `;
     }
