@@ -2,7 +2,7 @@ import {
   LitElement,
   html,
   svg
-} from "https://unpkg.com/@polymer/lit-element@latest/lit-element.js?module";
+} from "https://unpkg.com/@polymer/lit-element@0.5.2/lit-element.js?module";
 import { produce } from "https://cdn.jsdelivr.net/npm/immer@1.5.0/dist/immer.module.min.js";
 
 document.body.addEventListener(
