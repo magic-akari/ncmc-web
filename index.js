@@ -121,7 +121,7 @@ customElements.define(
                 : html`<div class="big">drag and drop ncm files here</div>`
             }
             
-            <audio ?hidden=${!this.src} ?controls=${!!this.src} src=${this.src}>
+            ${this.src && html`<audio controls src=${this.src}>`}
     `;
     }
   }
