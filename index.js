@@ -2,7 +2,7 @@ import {
   LitElement,
   html,
   svg
-} from "https://unpkg.com/@polymer/lit-element@0.5.2/lit-element.js?module";
+} from "https://unpkg.com/@polymer/lit-element@0.6.1/lit-element.js?module";
 import { produce } from "https://cdn.jsdelivr.net/npm/immer@1.5.0/dist/immer.module.min.js";
 
 document.body.addEventListener(
@@ -19,7 +19,7 @@ customElements.define(
   "ncmc-list",
   class extends LitElement {
     static get properties() {
-      return { tracks: Array, src: String };
+      return { tracks: { type: Array }, src: { type: String } };
     }
 
     constructor() {
@@ -55,13 +55,13 @@ customElements.define(
 
       this.playTrackHandler = /** @param {EventListener} e */ async e => {
         this.src = e.detail.url;
-        await this.renderComplete;
+        await this.updateComplete;
         this.shadowRoot.querySelector("audio").play();
       };
     }
 
-    connectedCallback() {
-      super.connectedCallback();
+    firstUpdated() {
+      super.firstUpdated();
 
       document.body.addEventListener(
         "drop",
@@ -77,15 +77,15 @@ customElements.define(
       document.addEventListener("play-track", this.playTrackHandler);
     }
 
-    disconnectedCallback() {
-      super.disconnectedCallback();
+    // disconnectedCallback() {
+    //   super.disconnectedCallback();
 
-      this.worker.terminate();
-      document.body.removeEventListener("drop", this.dropHandler, false);
-      document.removeEventListener("play-track", this.playTrackHandler);
-    }
+    //   this.worker.terminate();
+    //   document.body.removeEventListener("drop", this.dropHandler, false);
+    //   document.removeEventListener("play-track", this.playTrackHandler);
+    // }
 
-    _render({ tracks, src }) {
+    render() {
       return html`
             <style>
               section {
@@ -112,16 +112,16 @@ customElements.define(
             </style>
             
             ${
-              tracks.length
+              this.tracks.length
                 ? html`<section>
-                        ${tracks.map(
-                          track => html`<ncmc-card track=${track} />`
+                        ${this.tracks.map(
+                          track => html`<ncmc-card .track=${track} />`
                         )}
                       </section>`
                 : html`<div class="big">drag and drop ncm files here</div>`
             }
             
-            <audio controls=${!!src} src=${src}>
+            <audio ?hidden=${!this.src} ?controls=${!!this.src} src=${this.src}>
     `;
     }
   }
@@ -145,7 +145,7 @@ customElements.define(
   "ncmc-card",
   class extends LitElement {
     static get properties() {
-      return { track: Object };
+      return { track: { type: Object } };
     }
 
     constructor() {
@@ -188,8 +188,8 @@ customElements.define(
       return this.track.file.name;
     }
 
-    _render({ track }) {
-      if (track === undefined) return;
+    render() {
+      if (this.track === undefined) return;
       return html`
       <style>
         :host {
@@ -230,10 +230,10 @@ customElements.define(
           background-color: #00000080;
         }
       </style>
-      <section class="main" style="background-image:url('${track.image || placeHolder}')">
+      <section class="main" style="background-image:url('${this.track.image || placeHolder}')">
         <div class="button-group">
-          <a href="#" on-click=${this.playHandler}>${playButton()}</a>
-          <a disabled=${!track.url} href="${this.url}" download="${
+          <a href="#" @click=${this.playHandler}>${playButton()}</a>
+          <a disabled=${!this.track.url} href="${this.url}" download="${
         this.downloadName
       }">${downloadButton()}</a>
       </div>
