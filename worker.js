@@ -123,28 +123,36 @@ self.onmessage = e => {
     offset += 9;
     const image_size = dv.getUint32(offset, true);
     offset += 4;
-    const image = new Uint8Array(ab, offset, image_size);
-    let image_mime_type = "image/*";
+    // const image = new Uint8Array(ab, offset, image_size);
+    // let image_mime_type = "image/*";
 
-    if (
-      dv.getUint32(offset, true) === 0x474e5089 &&
-      dv.getUint32(offset + 4, true) === 0x0a1a0a0d
-    ) {
-      image_mime_type = "image/png";
-    } else if (dv.getUint32(offset, true) === 0xe0ffd8ff) {
-      image_mime_type = "image/jpg";
-    } else if (
-      dv.getUint16(offset, true) === 0x4947 &&
-      dv.getUint8(offset + 2) === 0x46
-    ) {
-      image_mime_type = "image/gif";
+    // if (
+    //   dv.getUint32(offset, true) === 0x474e5089 &&
+    //   dv.getUint32(offset + 4, true) === 0x0a1a0a0d
+    // ) {
+    //   image_mime_type = "image/png";
+    // } else if (dv.getUint32(offset, true) === 0xe0ffd8ff) {
+    //   image_mime_type = "image/jpg";
+    // } else if (
+    //   dv.getUint16(offset, true) === 0x4947 &&
+    //   dv.getUint8(offset + 2) === 0x46
+    // ) {
+    //   image_mime_type = "image/gif";
+    // }
+
+    if (image_size === 0) {
+      offset = 8367;
+    } else {
+      offset += image_size;
     }
-
-    offset += image_size;
-    const image_url = URL.createObjectURL(
-      new Blob([image], { type: image_mime_type })
-    );
-    self.postMessage({ id: data.id, type: "image", data: image_url });
+    // const image_url = URL.createObjectURL(
+    //   new Blob([image], { type: image_mime_type })
+    // );
+    self.postMessage({
+      id: data.id,
+      type: "image",
+      data: music_meta.albumPic.replace("http:", "https:")
+    });
 
     const original_file = new Uint8Array(ab, offset);
     const original_file_length = original_file.length;

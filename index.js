@@ -58,6 +58,15 @@ customElements.define(
         await this.updateComplete;
         this.shadowRoot.querySelector("audio").play();
       };
+
+      this.onUploadInputChange = {
+        /**
+         * @param {Event} e 
+         */
+        handleEvent(e) { 
+          this.fileHandler(e.target.files);
+        }
+      }
     }
 
     firstUpdated() {
@@ -118,8 +127,9 @@ customElements.define(
                           track => html`<ncmc-card .track=${track} />`
                         )}
                       </section>`
-                : html`<div class="big">drag and drop ncm files here</div>`
+                : html`<label for="upload-ncm" class="big">Click here or drag and drop ncm files here</label>`
             }
+            <input id="upload-ncm" type="file" accept=".ncm" multiple @change=${e => this.fileHandler(e.target.files)} hidden />
             
             ${this.src && html`<audio controls src=${this.src}>`}
     `;
