@@ -2,8 +2,8 @@ import {
   LitElement,
   html,
   svg
-} from "https://unpkg.com/@polymer/lit-element@0.6.1/lit-element.js?module";
-import { produce } from "https://cdn.jsdelivr.net/npm/immer@1.5.0/dist/immer.module.min.js";
+} from "https://unpkg.com/@polymer/lit-element@0.6.4/lit-element.js?module";
+import { produce } from "https://cdn.jsdelivr.net/npm/immer@1.9.3/dist/immer.module.min.js";
 
 document.body.addEventListener(
   "dragover",
