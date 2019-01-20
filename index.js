@@ -4,6 +4,8 @@ import {
   svg
 } from "https://unpkg.com/@polymer/lit-element@0.6.4/lit-element.js?module";
 import { produce } from "https://cdn.jsdelivr.net/npm/immer@1.9.3/dist/immer.module.min.js";
+import { ifDefined } from "https://unpkg.com/lit-html@0.14.0/directives/if-defined.js?module";
+import { repeat } from "https://unpkg.com/lit-html@0.14.0/directives/repeat.js?module";
 
 document.body.addEventListener(
   "dragover",
@@ -30,12 +32,17 @@ customElements.define(
 
       this.worker.addEventListener("message", e => {
         /**
-         * @type {{id:number, type:"meta"|"image"|"url", data:any}}
+         * @type {{id:number, type:"error"|"data", data:any}}
          */
         const data = e.data;
 
+        if (data.type === "error") {
+          alert(`error:${this.tracks[data.id].file.name} is not ncm file.`);
+          return;
+        }
+
         this.tracks = produce(this.tracks, draft => {
-          draft[data.id][data.type] = data.data;
+          Object.assign(draft[data.id], data.payload);
         });
       });
 
@@ -61,12 +68,12 @@ customElements.define(
 
       this.onUploadInputChange = {
         /**
-         * @param {Event} e 
+         * @param {Event} e
          */
-        handleEvent(e) { 
+        handleEvent(e) {
           this.fileHandler(e.target.files);
         }
-      }
+      };
     }
 
     firstUpdated() {
@@ -86,53 +93,76 @@ customElements.define(
       document.addEventListener("play-track", this.playTrackHandler);
     }
 
-    // disconnectedCallback() {
-    //   super.disconnectedCallback();
+    static get style() {
+      return html`
+        <style>
+          section {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-gap: 1rem;
+            padding: 1rem;
+          }
 
-    //   this.worker.terminate();
-    //   document.body.removeEventListener("drop", this.dropHandler, false);
-    //   document.removeEventListener("play-track", this.playTrackHandler);
-    // }
+          .big {
+            font-size: 38px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 1rem;
+            border: gray dashed 1rem;
+            border-radius: 1rem;
+          }
+
+          audio {
+            width: 100%;
+            position: fixed;
+            bottom: 0;
+            height: 32px;
+          }
+
+          [hidden] {
+            display: none;
+          }
+        </style>
+      `;
+    }
 
     render() {
       return html`
-            <style>
-              section {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-                grid-gap: 1rem;
-                padding: 1rem;
-              }
-              .big {
-                font-size: 38px;
-                height: 100%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                margin: 1rem;
-                border: gray dashed 1rem;
-                border-radius: 1rem;
-              }
-              audio {
-                width: 100%;
-                position: fixed;
-                bottom: 0;
-              }
-            </style>
-            
-            ${
-              this.tracks.length
-                ? html`<section>
-                        ${this.tracks.map(
-                          track => html`<ncmc-card .track=${track} />`
-                        )}
-                      </section>`
-                : html`<label for="upload-ncm" class="big">Click here or drag and drop ncm files here</label>`
-            }
-            <input id="upload-ncm" type="file" accept=".ncm" multiple @change=${e => this.fileHandler(e.target.files)} hidden />
-            
-            ${this.src && html`<audio controls src=${this.src}>`}
-    `;
+        ${this.constructor.style}
+
+        <section ?hidden=${this.tracks.length === 0}>
+          ${
+            repeat(
+              this.tracks,
+              track => track.id,
+              track => html`
+                <ncmc-card .track=${track} />
+              `
+            )
+          }
+        </section>
+
+        <label ?hidden=${this.tracks.length !== 0} for="upload-ncm" class="big">
+          Click here or drag and drop ncm files here
+        </label>
+
+        <input
+          id="upload-ncm"
+          type="file"
+          accept=".ncm"
+          multiple
+          @change=${e => this.fileHandler(e.target.files)}
+          hidden
+        />
+
+        <audio
+          src=${ifDefined(this.src)}
+          ?controls=${!!this.src}
+          ?hidden=${!this.src}
+        />
+      `;
     }
   }
 );
@@ -160,28 +190,29 @@ customElements.define(
 
     constructor() {
       super();
-      this.playHandler = () => {
+      this.playHandler = e => {
+        e.preventDefault();
         document.dispatchEvent(
           new CustomEvent("play-track", {
-            detail: { url: this.url }
+            detail: { url: this.track.url }
           })
         );
       };
     }
 
-    get url() {
-      return this.track.url || "#";
-    }
-
     get name() {
-      if (this.track.meta) {
+      if (
+        this.track.meta &&
+        this.track.meta.musicName &&
+        this.track.meta.artist
+      ) {
         return (
           this.track.meta.artist.map(ar => ar[0]).join("/") +
           " - " +
           this.track.meta.musicName
         );
       }
-      return "??? - ???";
+      return this.track.file.name.slice(0, -4);
     }
 
     get album() {
@@ -198,61 +229,77 @@ customElements.define(
       return this.track.file.name;
     }
 
+    get albumPic() {
+      return this.track.meta ? this.track.meta.albumPic : placeHolder;
+    }
+
+    static get style() {
+      return html`
+        <style>
+          :host {
+            width: 200px;
+          }
+
+          .main {
+            height: 200px;
+            width: 200px;
+            background-size: cover;
+          }
+
+          .button-group {
+            height: 100%;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          svg {
+            transition: opacity ease 0.5s;
+            opacity: 0;
+          }
+
+          .button-group:hover svg {
+            opacity: 1;
+          }
+
+          .button-group svg {
+            fill: white;
+            height: 50px;
+            width: 50px;
+          }
+
+          .button-group:hover {
+            transition: background-color ease 0.5s;
+            background-color: #00000080;
+          }
+        </style>
+      `;
+    }
+
     render() {
       if (this.track === undefined) return;
+
       return html`
-      <style>
-        :host {
-          width: 200px;
-        }
+        ${this.constructor.style}
 
-        .main {
-          height: 200px;
-          width: 200px;
-          background-size: cover;
-        }
+        <section class="main" style="background-image:url('${this.albumPic}')">
+          <div class="button-group">
+            <a href="#" @click=${this.playHandler}>${playButton()}</a>
+            <a
+              ?disabled=${!this.track.url}
+              href="${this.track.url}"
+              download="${this.downloadName}"
+              >${downloadButton()}</a
+            >
+          </div>
+        </section>
 
-        .button-group {
-          height: 100%;
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        svg {
-          transition: opacity ease 0.5s;
-          opacity: 0;
-        }
-
-        .button-group:hover svg {
-          opacity: 1;
-        }
-
-        .button-group svg {
-          fill: white;
-          height: 50px;
-          width: 50px;
-        }
-
-        .button-group:hover {
-          transition: background-color ease 0.5s;
-          background-color: #00000080;
-        }
-      </style>
-      <section class="main" style="background-image:url('${this.track.image || placeHolder}')">
-        <div class="button-group">
-          <a href="#" @click=${this.playHandler}>${playButton()}</a>
-          <a disabled=${!this.track.url} href="${this.url}" download="${
-        this.downloadName
-      }">${downloadButton()}</a>
-      </div>
-      </section>
-      <section class="info">
-        <p>${this.name}</p>
-        <p>${this.album}</p>
-      </section>
-`;
+        <section class="info">
+          <p>${this.name}</p>
+          <p>${this.album}</p>
+        </section>
+      `;
     }
   }
 );
