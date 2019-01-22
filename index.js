@@ -18,10 +18,62 @@ document.body.addEventListener(
 );
 
 customElements.define(
+  "ncmc-audio",
+  class extends LitElement {
+    static get properties() {
+      return { src: { type: String } };
+    }
+
+    constructor() {
+      super();
+
+      this.playTrackHandler = /** @param {EventListener} e */ async e => {
+        this.src = e.detail.url;
+        await this.updateComplete;
+        this.shadowRoot.querySelector("audio").play();
+      };
+    }
+
+    firstUpdated() {
+      document.addEventListener("play-track", this.playTrackHandler);
+    }
+
+    static get style() {
+      return html`
+        <style>
+          audio {
+            width: 100%;
+            position: fixed;
+            bottom: 0;
+            height: 32px;
+          }
+
+          [hidden] {
+            display: none;
+          }
+        </style>
+      `;
+    }
+
+    render() {
+      return html`
+        ${this.constructor.style}
+
+        <audio
+          src=${ifDefined(this.src)}
+          ?controls=${!!this.src}
+          ?hidden=${!this.src}
+        />
+      `;
+    }
+  }
+);
+
+customElements.define(
   "ncmc-list",
   class extends LitElement {
     static get properties() {
-      return { tracks: { type: Array }, src: { type: String } };
+      return { tracks: { type: Array } };
     }
 
     constructor() {
@@ -60,12 +112,6 @@ customElements.define(
         this.worker.postMessage(files);
       };
 
-      this.playTrackHandler = /** @param {EventListener} e */ async e => {
-        this.src = e.detail.url;
-        await this.updateComplete;
-        this.shadowRoot.querySelector("audio").play();
-      };
-
       this.onUploadInputChange = {
         /**
          * @param {Event} e
@@ -89,8 +135,6 @@ customElements.define(
         },
         false
       );
-
-      document.addEventListener("play-track", this.playTrackHandler);
     }
 
     static get style() {
@@ -112,13 +156,6 @@ customElements.define(
             margin: 1rem;
             border: gray dashed 1rem;
             border-radius: 1rem;
-          }
-
-          audio {
-            width: 100%;
-            position: fixed;
-            bottom: 0;
-            height: 32px;
           }
 
           [hidden] {
@@ -155,12 +192,6 @@ customElements.define(
           multiple
           @change=${e => this.fileHandler(e.target.files)}
           hidden
-        />
-
-        <audio
-          src=${ifDefined(this.src)}
-          ?controls=${!!this.src}
-          ?hidden=${!this.src}
         />
       `;
     }
@@ -273,6 +304,10 @@ customElements.define(
             transition: background-color ease 0.5s;
             background-color: #00000080;
           }
+
+          [hidden] {
+            display: none;
+          }
         </style>
       `;
     }
@@ -285,10 +320,17 @@ customElements.define(
 
         <section class="main" style="background-image:url('${this.albumPic}')">
           <div class="button-group">
-            <a href="#" @click=${this.playHandler}>${playButton()}</a>
             <a
+              href="#"
               ?disabled=${!this.track.url}
+              ?hidden=${!this.track.url}
+              @click=${this.playHandler}
+              >${playButton()}</a
+            >
+            <a
               href="${this.track.url}"
+              ?disabled=${!this.track.url}
+              ?hidden=${!this.track.url}
               download="${this.downloadName}"
               >${downloadButton()}</a
             >

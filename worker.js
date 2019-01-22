@@ -28,9 +28,9 @@ self.onmessage = e => {
     const reader = new FileReaderSync();
 
     /** @type {ArrayBuffer} */
-    let ab = reader.readAsArrayBuffer(data.file);
+    let filebuffer = reader.readAsArrayBuffer(data.file);
 
-    const dataview = new DataView(ab);
+    const dataview = new DataView(filebuffer);
 
     if (
       dataview.getUint32(0, true) !== 0x4e455443 ||
@@ -42,16 +42,16 @@ self.onmessage = e => {
 
     let offset = 10;
 
-    const key_box = (() => {
-      let key_len = dataview.getUint32(offset, true);
+    const keyDate = (() => {
+      const keyLen = dataview.getUint32(offset, true);
       offset += 4;
-      let key_data = new Uint8Array(ab, offset, key_len).map(
-        data => data ^ 0x64
+      const ciphertext = new Uint8Array(filebuffer, offset, keyLen).map(
+        uint8 => uint8 ^ 0x64
       );
-      offset += key_len;
+      offset += keyLen;
 
-      key_data = CryptoJS.AES.decrypt(
-        { ciphertext: CryptoJS.lib.WordArray.create(key_data) },
+      const plaintext = CryptoJS.AES.decrypt(
+        { ciphertext: CryptoJS.lib.WordArray.create(ciphertext) },
         CORE_KEY,
         {
           mode: CryptoJS.mode.ECB,
@@ -59,36 +59,37 @@ self.onmessage = e => {
         }
       );
 
-      let de_key_data = new Uint8Array(key_data.sigBytes);
+      const result = new Uint8Array(plaintext.sigBytes);
 
       {
-        const words = key_data.words;
-        const sigBytes = key_data.sigBytes;
+        const words = plaintext.words;
+        const sigBytes = plaintext.sigBytes;
         for (let i = 0; i < sigBytes; i++) {
-          de_key_data[i] = (words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
+          result[i] = (words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
         }
-
-        de_key_data = de_key_data.slice(17);
       }
 
-      let key_box = new Uint8Array(Array.from(Array(256).keys()));
+      return result.slice(17);
+    })();
 
-      {
-        const key_len = de_key_data.length;
+    const keyBox = (() => {
+      const box = new Uint8Array(Array(256).keys());
 
-        let j = 0;
+      const keyDataLen = keyDate.length;
 
-        for (let i = 0; i < 256; i++) {
-          j = (key_box[i] + j + de_key_data[i % key_len]) & 0xff;
-          [key_box[i], key_box[j]] = [key_box[j], key_box[i]];
-        }
+      let j = 0;
 
-        key_box = key_box.map(
-          (item, i, arr) => arr[(item + arr[(item + i) & 0xff]) & 0xff]
-        );
+      for (let i = 0; i < 256; i++) {
+        j = (box[i] + j + keyDate[i % keyDataLen]) & 0xff;
+        [box[i], box[j]] = [box[j], box[i]];
       }
 
-      return key_box;
+      return box.map((_, i, arr) => {
+        i = (i + 1) & 0xff;
+        const si = arr[i];
+        const sj = arr[(i + si) & 0xff];
+        return arr[(si + sj) & 0xff];
+      });
     })();
 
     /**
@@ -102,25 +103,25 @@ self.onmessage = e => {
      */
 
     /** @type {MusicMetaType|undefined} */
-    const music_meta = (() => {
-      const meta_data_len = dataview.getUint32(offset, true);
+    const musicMeta = (() => {
+      const metaDataLen = dataview.getUint32(offset, true);
       offset += 4;
-      if (meta_data_len === 0) {
+      if (metaDataLen === 0) {
         return {
           album: "\u26A0\uFE0F meta lost",
           albumPic: defaultAlbumPic
         };
       }
 
-      const meta_data = new Uint8Array(ab, offset, meta_data_len).map(
+      const ciphertext = new Uint8Array(filebuffer, offset, metaDataLen).map(
         data => data ^ 0x63
       );
-      offset += meta_data_len;
+      offset += metaDataLen;
 
-      const meta_data_decoded = CryptoJS.AES.decrypt(
+      const plaintext = CryptoJS.AES.decrypt(
         {
           ciphertext: CryptoJS.enc.Base64.parse(
-            CryptoJS.lib.WordArray.create(meta_data.slice(22)).toString(
+            CryptoJS.lib.WordArray.create(ciphertext.slice(22)).toString(
               CryptoJS.enc.Utf8
             )
           )
@@ -132,27 +133,25 @@ self.onmessage = e => {
         }
       );
 
-      const music_meta = JSON.parse(
-        meta_data_decoded.toString(CryptoJS.enc.Utf8).slice(6)
-      );
-      music_meta.albumPic = music_meta.albumPic.replace("http:", "https:");
-      return music_meta;
+      const result = JSON.parse(plaintext.toString(CryptoJS.enc.Utf8).slice(6));
+      result.albumPic = result.albumPic.replace("http:", "https:");
+      return result;
     })();
 
     offset += dataview.getUint32(offset + 5, true) + 13;
 
-    const original_file = new Uint8Array(ab, offset);
-    const original_file_length = original_file.length;
-    for (let index = 0; index < original_file_length; index += 0x8000) {
-      const right_spot = Math.min(0x8000, original_file_length - index);
-      for (let cur = 0; cur < right_spot; cur++) {
-        original_file[index + cur] ^= key_box[(cur + 1) & 0xff];
-      }
-    }
+    const audioData = new Uint8Array(filebuffer, offset);
+    const audioDataLen = audioData.length;
 
-    if (music_meta.format === undefined) {
-      music_meta.format = (() => {
-        const [f, L, a, C] = original_file;
+    // console.time(data.id);
+    for (let cur = 0; cur < audioDataLen; ++cur) {
+      audioData[cur] ^= keyBox[cur & 0xff];
+    }
+    // console.timeEnd(data.id);
+
+    if (musicMeta.format === undefined) {
+      musicMeta.format = (() => {
+        const [f, L, a, C] = audioData;
         if (f === 0x66 && L === 0x4c && a === 0x61 && C === 0x43) {
           return "flac";
         }
@@ -160,18 +159,18 @@ self.onmessage = e => {
       })();
     }
 
-    const music_file = new Blob([original_file], {
-      type: audio_mime_type[music_meta.format]
+    const musicData = new Blob([audioData], {
+      type: audio_mime_type[musicMeta.format]
     });
 
-    const music_url = URL.createObjectURL(music_file);
+    const musicUrl = URL.createObjectURL(musicData);
 
     self.postMessage({
       id: data.id,
       type: "data",
       payload: {
-        meta: music_meta,
-        url: music_url
+        meta: musicMeta,
+        url: musicUrl
       }
     });
   }
