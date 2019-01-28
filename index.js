@@ -1,11 +1,12 @@
 import {
   LitElement,
   html,
-  svg
-} from "https://unpkg.com/@polymer/lit-element@0.6.4/lit-element.js?module";
-import { produce } from "https://cdn.jsdelivr.net/npm/immer@1.9.3/dist/immer.module.min.js";
-import { ifDefined } from "https://unpkg.com/lit-html@0.14.0/directives/if-defined.js?module";
-import { repeat } from "https://unpkg.com/lit-html@0.14.0/directives/repeat.js?module";
+  svg,
+  css
+} from "https://unpkg.com/lit-element@2.0.0-rc.5/lit-element.js?module";
+import { produce } from "https://cdn.jsdelivr.net/npm/immer@1.12.1/dist/immer.module.min.js";
+import { ifDefined } from "https://unpkg.com/lit-html@1.0.0-rc.2/directives/if-defined.js?module";
+import { repeat } from "https://unpkg.com/lit-html@1.0.0-rc.2/directives/repeat.js?module";
 
 document.body.addEventListener(
   "dragover",
@@ -38,27 +39,23 @@ customElements.define(
       document.addEventListener("play-track", this.playTrackHandler);
     }
 
-    static get style() {
-      return html`
-        <style>
-          audio {
-            width: 100%;
-            position: fixed;
-            bottom: 0;
-            height: 32px;
-          }
+    static get styles() {
+      return css`
+        audio {
+          width: 100%;
+          position: fixed;
+          bottom: 0;
+          height: 32px;
+        }
 
-          [hidden] {
-            display: none;
-          }
-        </style>
+        [hidden] {
+          display: none;
+        }
       `;
     }
 
     render() {
       return html`
-        ${this.constructor.style}
-
         <audio
           src=${ifDefined(this.src)}
           ?controls=${!!this.src}
@@ -137,38 +134,32 @@ customElements.define(
       );
     }
 
-    static get style() {
-      return html`
-        <style>
-          section {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            grid-gap: 1rem;
-            padding: 1rem;
-          }
-
-          .big {
-            font-size: 38px;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 1rem;
-            border: gray dashed 1rem;
-            border-radius: 1rem;
-          }
-
-          [hidden] {
-            display: none;
-          }
-        </style>
+    static get styles() {
+      return css`
+        section {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          grid-gap: 1rem;
+          padding: 1rem;
+        }
+        .big {
+          font-size: 38px;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 1rem;
+          border: gray dashed 1rem;
+          border-radius: 1rem;
+        }
+        [hidden] {
+          display: none;
+        }
       `;
     }
 
     render() {
       return html`
-        ${this.constructor.style}
-
         <section ?hidden=${this.tracks.length === 0}>
           ${
             repeat(
@@ -198,17 +189,31 @@ customElements.define(
   }
 );
 
-const downloadButton = () => svg`
-<svg height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-  <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-</svg>
-`;
+const downloadButton = () => {
+  return svg`
+    <svg
+      height="24"
+      viewBox="0 0 24 24"
+      width="24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+    </svg>
+  `;
+};
 
-const playButton = () => svg`
-<svg height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-    <path d="M8 5v14l11-7z"></path>
-</svg>
-`;
+const playButton = () => {
+  return svg`
+    <svg
+      height="24"
+      viewBox="0 0 24 24"
+      width="24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M8 5v14l11-7z"></path>
+    </svg>
+  `;
+};
 
 const placeHolder = `data:image/svg+xml;utf8,<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><path fill="%23dedede" stroke="%23555" stroke-width="2" d="M2 2h196v196H2z" /><text x="50%" y="50%" font-size="32" text-anchor="middle" fill="%23555">cover</text></svg>`;
 
@@ -264,51 +269,49 @@ customElements.define(
       return this.track.meta ? this.track.meta.albumPic : placeHolder;
     }
 
-    static get style() {
-      return html`
-        <style>
-          :host {
-            width: 200px;
-          }
+    static get styles() {
+      return css`
+        :host {
+          width: 200px;
+        }
 
-          .main {
-            height: 200px;
-            width: 200px;
-            background-size: cover;
-          }
+        .main {
+          height: 200px;
+          width: 200px;
+          background-size: cover;
+        }
 
-          .button-group {
-            height: 100%;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
+        .button-group {
+          height: 100%;
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
 
-          svg {
-            transition: opacity ease 0.5s;
-            opacity: 0;
-          }
+        svg {
+          transition: opacity ease 0.5s;
+          opacity: 0;
+        }
 
-          .button-group:hover svg {
-            opacity: 1;
-          }
+        .button-group:hover svg {
+          opacity: 1;
+        }
 
-          .button-group svg {
-            fill: white;
-            height: 50px;
-            width: 50px;
-          }
+        .button-group svg {
+          fill: white;
+          height: 50px;
+          width: 50px;
+        }
 
-          .button-group:hover {
-            transition: background-color ease 0.5s;
-            background-color: #00000080;
-          }
+        .button-group:hover {
+          transition: background-color ease 0.5s;
+          background-color: #00000080;
+        }
 
-          [hidden] {
-            display: none;
-          }
-        </style>
+        [hidden] {
+          display: none;
+        }
       `;
     }
 
@@ -316,8 +319,6 @@ customElements.define(
       if (this.track === undefined) return;
 
       return html`
-        ${this.constructor.style}
-
         <section class="main" style="background-image:url('${this.albumPic}')">
           <div class="button-group">
             <a
