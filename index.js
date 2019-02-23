@@ -3,10 +3,10 @@ import {
   html,
   svg,
   css
-} from "https://unpkg.com/lit-element@2.0.0-rc.5/lit-element.js?module";
-import { produce } from "https://cdn.jsdelivr.net/npm/immer@1.12.1/dist/immer.module.min.js";
-import { ifDefined } from "https://unpkg.com/lit-html@1.0.0-rc.2/directives/if-defined.js?module";
-import { repeat } from "https://unpkg.com/lit-html@1.0.0-rc.2/directives/repeat.js?module";
+} from "https://unpkg.com/lit-element@2.0.1/lit-element.js?module";
+import { produce } from "https://cdn.jsdelivr.net/npm/immer@2.0.0/dist/immer.module.min.js";
+import { ifDefined } from "https://unpkg.com/lit-html@1.0.0/directives/if-defined.js?module";
+import { repeat } from "https://unpkg.com/lit-html@1.0.0/directives/repeat.js?module";
 
 document.body.addEventListener(
   "dragover",
@@ -161,15 +161,13 @@ customElements.define(
     render() {
       return html`
         <section ?hidden=${this.tracks.length === 0}>
-          ${
-            repeat(
-              this.tracks,
-              track => track.id,
-              track => html`
-                <ncmc-card .track=${track} />
-              `
-            )
-          }
+          ${repeat(
+            this.tracks,
+            track => track.id,
+            track => html`
+              <ncmc-card .track=${track} />
+            `
+          )}
         </section>
 
         <label ?hidden=${this.tracks.length !== 0} for="upload-ncm" class="big">
