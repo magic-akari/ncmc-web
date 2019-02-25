@@ -5,8 +5,8 @@ import {
   css
 } from "https://unpkg.com/lit-element@2.0.1/lit-element.js?module";
 import { produce } from "https://cdn.jsdelivr.net/npm/immer@2.0.0/dist/immer.module.min.js";
-import { ifDefined } from "https://unpkg.com/lit-html@1.0.0/directives/if-defined.js?module";
-import { repeat } from "https://unpkg.com/lit-html@1.0.0/directives/repeat.js?module";
+import { ifDefined } from "https://unpkg.com/lit-html@^1.0.0/directives/if-defined.js?module";
+import { repeat } from "https://unpkg.com/lit-html@^1.0.0/directives/repeat.js?module";
 
 document.body.addEventListener(
   "dragover",
